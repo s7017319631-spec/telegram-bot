@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import threading
+import requests
 from flask import Flask, request
 
 import config
@@ -19,6 +20,25 @@ _telegram_loop = None
 _telegram_lock = threading.Lock()
 
 
+def _ensure_webhook():
+    """Автоматически сообщает Telegram актуальный адрес вебхука.
+    На Render free нет Shell, поэтому делаем это сами при каждом холодном
+    старте — не нужно вручную запускать set_webhook.py."""
+    if not config.WEBHOOK_BASE_URL:
+        logger.warning("WEBHOOK_BASE_URL не задан — пропускаю автонастройку вебхука")
+        return
+    webhook_url = f"{config.WEBHOOK_BASE_URL}/telegram-webhook/{config.BOT_TOKEN}"
+    try:
+        resp = requests.get(
+            f"https://api.telegram.org/bot{config.BOT_TOKEN}/setWebhook",
+            params={"url": webhook_url},
+            timeout=10,
+        )
+        logger.info(f"🔗 Webhook автонастроен: {resp.json()}")
+    except Exception as e:
+        logger.error(f"❌ Не удалось автоматически установить webhook: {e}", exc_info=True)
+
+
 def _get_telegram_app():
     global _telegram_app, _telegram_loop
     if _telegram_app is None:
@@ -33,6 +53,8 @@ def _get_telegram_app():
         _telegram_app = bot_handlers.build_application()
         _telegram_loop.run_until_complete(_telegram_app.initialize())
         logger.info("✅ Telegram Application инициализирован")
+
+        _ensure_webhook()
     return _telegram_app, _telegram_loop
 
 
