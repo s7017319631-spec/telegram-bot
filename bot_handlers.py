@@ -121,6 +121,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     user_language[user_id] = "kk"
 
+    await safe_call(context.bot.send_chat_action, chat_id=update.effective_chat.id, action="typing")
+
     keyboard = [
         [InlineKeyboardButton("🇰🇿 Қазақша", callback_data="lang_kk")],
         [InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru")],
@@ -148,6 +150,7 @@ async def show_main_menu(query, lang: str):
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await safe_call(query.answer)
+    await safe_call(context.bot.send_chat_action, chat_id=query.message.chat_id, action="typing")
     user_id = query.from_user.id
     data = query.data
 
@@ -237,6 +240,7 @@ async def contact_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     #    - для мини-курса/консультации — соответствующий файл
     #    - для платного курса своего файла нет — дарим бесплатный мини-курс материал как бонус
     send_key = "mini_course" if doc_key == "paid_course" else doc_key
+    await safe_call(context.bot.send_chat_action, chat_id=update.message.chat_id, action="upload_document")
     await send_document_cached(context, update.message.chat_id, send_key, lang)
 
     # 4) уведомляем организатора
