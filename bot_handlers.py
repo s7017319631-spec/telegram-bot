@@ -33,12 +33,14 @@ DOCS = {
     "mini_course": {
         "files": [
             {
-                "path": config.MINI_COURSE_FILE_PATH,
+                "path_ru": config.MINI_COURSE_FILE_PATH_RU,
+                "path_kk": config.MINI_COURSE_FILE_PATH_KK,
                 "caption_ru": "🎯 Материалы мини-курса «Как вести личный и семейный бюджет»",
                 "caption_kk": "🎯 «Жеке және отбасылық бюджет» мини-курсының материалдары",
             },
             {
-                "path": config.BUDGET_FREE_FILE_PATH,
+                "path_ru": config.BUDGET_FREE_FILE_PATH_RU,
+                "path_kk": config.BUDGET_FREE_FILE_PATH_KK,
                 "caption_ru": "📊 Бесплатный шаблон личного бюджета (Excel)",
                 "caption_kk": "📊 Жеке бюджеттің тегін үлгісі (Excel)",
             },
@@ -47,7 +49,8 @@ DOCS = {
     "consulting": {
         "files": [
             {
-                "path": config.CONSULTING_FILE_PATH,
+                "path_ru": config.CONSULTING_FILE_PATH_RU,
+                "path_kk": config.CONSULTING_FILE_PATH_KK,
                 "caption_ru": "💼 Материалы по консультационным услугам",
                 "caption_kk": "💼 Консультациялық қызметтер бойынша материалдар",
             },
@@ -121,6 +124,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     user_language[user_id] = "kk"
 
+    await safe_call(context.bot.send_chat_action, chat_id=update.effective_chat.id, action="typing")
+
     keyboard = [
         [InlineKeyboardButton("🇰🇿 Қазақша", callback_data="lang_kk")],
         [InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru")],
@@ -148,6 +153,7 @@ async def show_main_menu(query, lang: str):
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await safe_call(query.answer)
+    await safe_call(context.bot.send_chat_action, chat_id=query.message.chat_id, action="typing")
     user_id = query.from_user.id
     data = query.data
 
@@ -237,6 +243,7 @@ async def contact_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     #    - для мини-курса/консультации — соответствующий файл
     #    - для платного курса своего файла нет — дарим бесплатный мини-курс материал как бонус
     send_key = "mini_course" if doc_key == "paid_course" else doc_key
+    await safe_call(context.bot.send_chat_action, chat_id=update.message.chat_id, action="upload_document")
     await send_document_cached(context, update.message.chat_id, send_key, lang)
 
     # 4) уведомляем организатора
@@ -251,7 +258,7 @@ async def send_document_cached(context: ContextTypes.DEFAULT_TYPE, chat_id: int,
     doc_info = DOCS[doc_key]
 
     for file_info in doc_info["files"]:
-        path = file_info["path"]
+        path = file_info.get(f"path_{lang}", file_info.get("path_ru"))
         caption = file_info.get(f"caption_{lang}", file_info.get("caption_ru"))
 
         cached_file_id = _file_id_cache.get(path)
