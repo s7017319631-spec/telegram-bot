@@ -75,14 +75,12 @@ def get_text(key: str, lang: str = "kk") -> str:
         "start_ru": "Здравствуйте! 👋\nЯ — помощник по финансовой грамотности.\n\nЧем могу помочь?",
         "start_kk": "Сәлеметсіз бе! 👋\nМен — қаржылық сауаттылық бойынша көмекшімін.\n\nНе істеуге көмектесе аламын?",
         "choose_lang": "Тілді таңдаңыз/Выберите язык:",
-        "course_btn_ru": "1️⃣ Хочу изучить курс",
-        "course_btn_kk": "1️⃣ Курсты үйренгім келеді",
-        "consulting_btn_ru": "2️⃣ Нужна консультация/услуга",
-        "consulting_btn_kk": "2️⃣ Консультация/қызмет қажет",
+        "course_btn_ru": "1️⃣ Хочу изучить бесплатный курс",
+        "course_btn_kk": "1️⃣ Тегін курсты үйренгім келеді",
         "site_btn_ru": "3️⃣ Сайт",
         "site_btn_kk": "3️⃣ Сайт",
-        "paid_course_btn_ru": "4️⃣ Хочу основной курс (платный)",
-        "paid_course_btn_kk": "4️⃣ Негізгі курсты қалаймын (ақылы)",
+        "paid_course_btn_ru": "2️⃣ Хочу основной курс (платный)",
+        "paid_course_btn_kk": "2️⃣ Негізгі курсты қалаймын (ақылы)",
         "ask_phone_ru": "Чтобы отправить материалы, поделитесь, пожалуйста, номером телефона:",
         "ask_phone_kk": "Материалдарды жіберу үшін телефон нөміріңізбен бөлісіңізші:",
         "share_contact_ru": "📱 Отправить номер телефона",
@@ -139,7 +137,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def show_main_menu(query, lang: str):
     keyboard = [
         [InlineKeyboardButton(get_text("course_btn", lang), callback_data="request_mini_course")],
-        [InlineKeyboardButton(get_text("consulting_btn", lang), callback_data="request_consulting")],
         [InlineKeyboardButton(get_text("paid_course_btn", lang), callback_data="request_paid_course")],
         [InlineKeyboardButton(get_text("site_btn", lang), url=config.WEBSITE_URL)],
     ]
@@ -169,10 +166,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if data == "menu":
             await show_main_menu(query, lang)
 
-        elif data in ("request_mini_course", "request_consulting", "request_paid_course"):
+        elif data in ("request_mini_course", "request_paid_course"):
             doc_key = {
                 "request_mini_course": "mini_course",
-                "request_consulting": "consulting",
                 "request_paid_course": "paid_course",
             }[data]
             # запоминаем, какое действие обрабатывать после получения контакта
