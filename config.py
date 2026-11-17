@@ -20,13 +20,13 @@ ADMIN_IDS = {
 
 # Пути к файлам-материалам (лежат в репозитории бота, папка files/)
 # Раздельно для ru/kk — бот сам выберет нужный файл по языку пользователя.
-# Если *_KK не задан явно — используется тот же путь, что и для ru (чтобы не
-# сломать деплой, пока казахские версии файлов ещё не загружены).
+# По умолчанию ищем файлы с суффиксами _ru.pdf / _kk.pdf и т.п. — если
+# назвали файлы иначе, переопределите через переменные окружения на Render.
 MINI_COURSE_FILE_PATH_RU = os.environ.get("MINI_COURSE_FILE_PATH_RU", "files/mini_course_materials_ru.pdf")
-MINI_COURSE_FILE_PATH_KK = os.environ.get("MINI_COURSE_FILE_PATH_KK", MINI_COURSE_FILE_PATH_RU)
+MINI_COURSE_FILE_PATH_KK = os.environ.get("MINI_COURSE_FILE_PATH_KK", "files/mini_course_materials_kk.pdf")
 
 BUDGET_FREE_FILE_PATH_RU = os.environ.get("BUDGET_FREE_FILE_PATH_RU", "files/budget_free_ru.xlsx")
-BUDGET_FREE_FILE_PATH_KK = os.environ.get("BUDGET_FREE_FILE_PATH_KK", BUDGET_FREE_FILE_PATH_RU)
+BUDGET_FREE_FILE_PATH_KK = os.environ.get("BUDGET_FREE_FILE_PATH_KK", "files/budget_free_kk.xlsx")
 
 CONSULTING_FILE_PATH_RU = os.environ.get("CONSULTING_FILE_PATH_RU", "files/consulting_materials_ru.pdf")
-CONSULTING_FILE_PATH_KK = os.environ.get("CONSULTING_FILE_PATH_KK", CONSULTING_FILE_PATH_RU)
+CONSULTING_FILE_PATH_KK = os.environ.get("CONSULTING_FILE_PATH_KK", "files/consulting_materials_kk.pdf")
