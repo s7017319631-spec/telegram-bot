@@ -75,8 +75,8 @@ def get_text(key: str, lang: str = "kk") -> str:
         "start_ru": "Здравствуйте! 👋\nЯ — помощник по финансовой грамотности.\n\nЧем могу помочь?",
         "start_kk": "Сәлеметсіз бе! 👋\nМен — қаржылық сауаттылық бойынша көмекшімін.\n\nНе істеуге көмектесе аламын?",
         "choose_lang": "Тілді таңдаңыз/Выберите язык:",
-        "course_btn_ru": "1️⃣ Хочу изучить бесплатный курс",
-        "course_btn_kk": "1️⃣ Тегін курсты үйренгім келеді",
+        "course_btn_ru": "1️⃣ Получить материалы бесплатного курса",
+        "course_btn_kk": "1️⃣ Тегін курс материалдарын алу",
         "site_btn_ru": "3️⃣ Сайт",
         "site_btn_kk": "3️⃣ Сайт",
         "paid_course_btn_ru": "2️⃣ Хочу основной курс (платный)",
@@ -166,11 +166,13 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if data == "menu":
             await show_main_menu(query, lang)
 
-        elif data in ("request_mini_course", "request_paid_course"):
-            doc_key = {
-                "request_mini_course": "mini_course",
-                "request_paid_course": "paid_course",
-            }[data]
+        elif data == "request_mini_course":
+            # Бесплатный курс: выдаём материалы сразу, без запроса телефона
+            await deliver_free_course(context, query.from_user, query.message.chat_id, lang)
+
+        elif data == "request_paid_course":
+            # Платный курс: сначала запрашиваем контакт (как раньше)
+            doc_key = "paid_course"
             # запоминаем, какое действие обрабатывать после получения контакта
             context.user_data["pending_doc"] = doc_key
 
@@ -194,6 +196,28 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
         except Exception:
             pass
+
+
+async def deliver_free_course(context: ContextTypes.DEFAULT_TYPE, user, chat_id: int, lang: str):
+    """Бесплатный курс без телефона: сохраняем пользователя (Telegram-данные),
+    логируем выдачу, отправляем файлы, уведомляем организатора."""
+    full_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "—"
+    try:
+        storage.upsert_user(
+            telegram_id=user.id,
+            full_name=full_name,
+            username=user.username or "",
+            phone=None,  # не затираем телефон, если пользователь давал его раньше
+            lang=lang,
+        )
+        storage.log_delivery(user.id, "mini_course")
+    except Exception as e:
+        logger.error(f"Ошибка записи в БД: {e}", exc_info=True)
+
+    await safe_call(context.bot.send_message, chat_id=chat_id, text=get_text("thanks", lang))
+    await safe_call(context.bot.send_chat_action, chat_id=chat_id, action="upload_document")
+    await send_document_cached(context, chat_id, "mini_course", lang)
+    await notify_organizer(context, user, None, "mini_course")
 
 
 # --- Получение контакта → выдача документа ---
@@ -293,7 +317,7 @@ async def notify_organizer(context: ContextTypes.DEFAULT_TYPE, user, phone: str,
             f"👤 {full_name}\n"
             f"🆔 ID: <code>{user.id}</code>\n"
             f"🔗 @{username}\n"
-            f"📞 {phone}\n"
+            f"📞 {phone or 'не указан'}\n"
             f"📝 Действие: {action}\n"
             f"⏰ {time.strftime('%d %b %Y, %H:%M')}"
         )
